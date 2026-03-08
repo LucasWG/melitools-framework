@@ -1,0 +1,678 @@
+# PROMPT ULTRA COMPLETO — FRAMEWORK PROFISSIONAL DE AUTOMAÇÃO TAMPERMONKEY COM PLUGINS REMOTOS
+
+## Papel da IA
+
+Atue como um **Engenheiro de Software Sênior especializado em automação de navegador utilizando JavaScript puro (Vanilla JS) e Tampermonkey**, com experiência em:
+
+- arquiteturas modulares
+- sistemas de plugins
+- sandbox de execução
+- carregamento remoto de scripts
+- segurança de código remoto
+- criptografia e verificação de assinatura
+- controle de permissões
+- cache offline
+- interfaces modernas
+- automação corporativa
+- otimização de performance
+
+O código gerado deve ser **robusto o suficiente para uso real em ambiente corporativo**.
+
+Priorize sempre:
+
+- estabilidade
+- previsibilidade
+- segurança
+- performance
+- arquitetura extensível
+- baixo impacto no DOM
+
+Evite soluções improvisadas.
+
+---
+
+# Objetivo do Projeto
+
+Criar um **Framework de Automação Tampermonkey profissional**, capaz de:
+
+- carregar plugins remotamente
+- atualizar plugins automaticamente
+- manter cache offline
+- oferecer sistema de plugins modular
+- executar plugins em sandbox
+- garantir integridade de código
+- validar licença assinada
+- oferecer interface moderna
+- suportar hot reload
+- bloquear execução remotamente (Kill Switch)
+
+---
+
+# Arquitetura Geral
+
+```
+Automation Framework
+│
+├── Core
+│   ├── LicenseManager
+│   ├── PluginManager
+│   ├── PluginSandbox
+│   ├── RemoteLoader
+│   ├── CacheManager
+│   ├── UpdateManager
+│   ├── PermissionManager
+│   ├── SecurityManager
+│   ├── KillSwitchManager
+│   ├── UIManager
+│   ├── ToastManager
+│   ├── ShortcutManager
+│   └── DebugLogger
+│
+├── Storage
+│   ├── IndexedDB
+│   └── LocalStorage (fallback)
+│
+└── Remote
+    ├── framework.json
+    ├── plugins/index.json
+    └── plugins/*
+```
+
+---
+
+# Sistema de Licença Assinada
+
+O framework **não usa token simples**.
+
+Ele usa uma **licença assinada digitalmente**.
+
+Formato:
+
+```
+BASE64(payload).BASE64(signature)
+```
+
+Exemplo:
+
+```
+eyJ1c2VyIjoiam9hbyIsInBsdWdpbnMiOlsiKiJdLCJleHBpcmVzIjoiMjAyNi0xMi0zMSJ9.XYABCD123
+```
+
+---
+
+# Estrutura do Payload da Licença
+
+```json
+{
+	"user": "joao",
+	"plugins": ["*"],
+	"expires": "2026-12-31"
+}
+```
+
+---
+
+# Assinatura da Licença
+
+A assinatura deve ser gerada usando:
+
+```
+ECDSA ou RSA
+```
+
+Servidor possui:
+
+```
+PRIVATE KEY
+```
+
+Framework possui:
+
+```
+PUBLIC KEY
+```
+
+Fluxo:
+
+```
+carregar licença
+↓
+decodificar payload
+↓
+verificar assinatura com PUBLIC KEY
+↓
+se inválida → bloquear framework
+↓
+se válida → continuar
+```
+
+---
+
+# Expiração da Licença
+
+A licença deve conter:
+
+```
+expires
+```
+
+Framework verifica:
+
+```
+data atual > expires
+```
+
+Se expirada:
+
+```
+bloquear execução
+mostrar toast
+```
+
+---
+
+# Sistema de Permissões da Licença
+
+A licença define quais plugins podem ser executados.
+
+Exemplo:
+
+```
+"*"
+```
+
+Permite todos plugins.
+
+Ou:
+
+```
+["inputInterceptor", "scannerHelper"]
+```
+
+Permite apenas plugins específicos.
+
+---
+
+# Sistema de Plugins Remotos
+
+Estrutura no repositório:
+
+```
+repo
+│
+├── framework.json
+│
+├── plugins
+│   │
+│   ├── index.json
+│   │
+│   ├── input-interceptor
+│   │   ├── plugin.json
+│   │   └── plugin.js
+│   │
+│   └── scanner-helper
+│       ├── plugin.json
+│       └── plugin.js
+```
+
+---
+
+# Arquivo de Índice de Plugins
+
+`plugins/index.json`
+
+```json
+{
+	"plugins": {
+		"inputInterceptor": "1.0.0",
+		"scannerHelper": "2.1.0"
+	}
+}
+```
+
+---
+
+# Objetivo do Index
+
+Permitir:
+
+- verificar atualizações rapidamente
+- evitar downloads desnecessários
+- reduzir chamadas ao GitHub
+
+---
+
+# Manifesto do Plugin
+
+`plugin.json`
+
+```json
+{
+	"id": "inputInterceptor",
+	"name": "Interceptador Inteligente",
+	"version": "1.0.0",
+	"entry": "plugin.js",
+	"sha256": "HASH_DO_PLUGIN",
+	"signature": "ASSINATURA_DO_PLUGIN",
+	"permissions": ["events.listen", "dom.read", "dom.write", "navigation.redirect"],
+	"domains": ["adminml.com", "mercadolivre.com"]
+}
+```
+
+---
+
+# Validação de Segurança do Plugin
+
+Fluxo:
+
+```
+baixar plugin.json
+↓
+baixar plugin.js
+↓
+calcular SHA256
+↓
+comparar com manifesto
+↓
+verificar assinatura digital
+↓
+se válido → executar
+↓
+se inválido → bloquear plugin
+```
+
+---
+
+# Sandbox Real de Plugins
+
+Plugins **não devem executar diretamente no escopo global**.
+
+Devem rodar dentro de uma sandbox controlada.
+
+Implementação:
+
+```
+PluginSandbox
+```
+
+Execução:
+
+```javascript
+function runPlugin(pluginCode, api) {
+	const sandbox = {
+		API: api,
+		console: console
+	}
+
+	const keys = Object.keys(sandbox)
+	const values = Object.values(sandbox)
+
+	const fn = new Function(...keys, pluginCode)
+
+	fn(...values)
+}
+```
+
+Plugins **não recebem acesso direto a:**
+
+```
+window
+document
+localStorage
+cookies
+fetch
+```
+
+Somente APIs controladas.
+
+---
+
+# API Disponível para Plugins
+
+Exemplo:
+
+```javascript
+API.events.on(event, handler)
+
+API.navigation.redirect(url)
+
+API.dom.read(selector)
+
+API.dom.write(selector, value)
+
+API.toast.info(message)
+```
+
+---
+
+# Sistema de Cache Inteligente
+
+Plugins devem funcionar **offline**.
+
+Prioridade de armazenamento:
+
+```
+IndexedDB
+```
+
+Fallback:
+
+```
+localStorage
+```
+
+---
+
+# Estrutura de Cache
+
+```
+cache
+│
+├── plugin-id
+│   ├── version
+│   ├── code
+│   └── hash
+```
+
+---
+
+# Fluxo de Cache
+
+```
+carregar plugin
+↓
+verificar cache
+↓
+se versão igual → usar cache
+↓
+se versão diferente → baixar
+↓
+validar hash
+↓
+salvar cache
+```
+
+---
+
+# Atualização Automática
+
+Atualização deve usar:
+
+```
+plugins/index.json
+```
+
+Fluxo:
+
+```
+verificar versão remota
+↓
+comparar com versão local
+↓
+se diferente
+↓
+baixar plugin
+↓
+validar segurança
+↓
+atualizar cache
+↓
+executar hot reload
+```
+
+---
+
+# Hot Reload
+
+Fluxo:
+
+```
+plugin antigo destroy()
+↓
+remover listeners
+↓
+carregar nova versão
+↓
+init()
+```
+
+---
+
+# Sistema de Kill Switch
+
+Arquivo remoto:
+
+```
+framework.json
+```
+
+Exemplo:
+
+```json
+{
+	"enabled": true,
+	"minVersion": "1.0.0"
+}
+```
+
+---
+
+# Comportamento
+
+Framework verifica no início:
+
+```
+framework.json
+```
+
+Se:
+
+```
+enabled = false
+```
+
+Framework:
+
+```
+desativa imediatamente
+mostra mensagem
+não carrega plugins
+```
+
+---
+
+# Controle de Versão do Framework
+
+Se:
+
+```
+framework.version < minVersion
+```
+
+Framework:
+
+```
+bloqueia execução
+solicita atualização
+```
+
+---
+
+# Sistema de Toast
+
+Tipos:
+
+```
+info
+success
+warning
+error
+download-progress
+```
+
+Posição:
+
+```
+canto inferior direito
+```
+
+---
+
+# Interface do Framework
+
+Estilo visual inspirado em:
+
+```
+Mercado Livre
+```
+
+Características:
+
+- modal central
+- bordas arredondadas
+- sombra suave
+- responsivo
+- leve
+
+---
+
+# Atalho Global
+
+Abrir painel:
+
+```
+ALT + Q
+```
+
+---
+
+# Menu de Plugins
+
+Interface deve mostrar:
+
+```
+☑ Interceptador Inteligente ⚙
+☐ Scanner Helper
+```
+
+Exibir:
+
+- toggle ON/OFF
+- versão instalada
+- atualização disponível
+
+---
+
+# Plugin Inicial — Interceptador Inteligente
+
+Objetivo:
+
+Interceptar entradas vindas de:
+
+```
+CTRL + V
+leitores de código de barras
+```
+
+---
+
+# Sanitização
+
+Regex:
+
+```
+/\D/g
+```
+
+Remove tudo que não for número.
+
+---
+
+# Padrões Detectados
+
+### ID de pacote
+
+```
+11 dígitos
+```
+
+### Chave de rastreio
+
+```
+44 dígitos
+```
+
+---
+
+# Comportamento
+
+### ID
+
+Redirecionar para:
+
+```
+https://envios.adminml.com/logistics/package-management/package/{ID}
+```
+
+ou
+
+```
+https://shipping-bo.adminml.com/sauron/shipments/shipment/{ID}
+```
+
+---
+
+### Chave
+
+```
+sanitizar
+preencher input ativo
+não redirecionar
+```
+
+---
+
+# Sistema de Debug
+
+Constante global:
+
+```javascript
+const DEBUG = false
+```
+
+Logs possíveis:
+
+```
+[Framework] iniciado
+[License] licença validada
+[Security] hash validado
+[Security] assinatura válida
+[PluginManager] plugin carregado
+[PluginManager] plugin atualizado
+[PluginSandbox] plugin executado
+[Permission] plugin autorizado
+[Permission] plugin bloqueado
+[KillSwitch] framework desativado
+[Interceptor] entrada detectada
+```
+
+---
+
+# Resultado Esperado da IA
+
+Gerar um **framework completo funcional** contendo:
+
+1️⃣ LicenseManager
+2️⃣ PluginManager
+3️⃣ PluginSandbox
+4️⃣ RemoteLoader
+5️⃣ CacheManager
+6️⃣ UpdateManager
+7️⃣ PermissionManager
+8️⃣ SecurityManager
+9️⃣ KillSwitchManager
+🔟 Sistema de cache offline
+1️⃣1️⃣ Sistema de atualização automática
+1️⃣2️⃣ UI completa com painel de plugins
+1️⃣3️⃣ Atalho global ALT+Q
+1️⃣4️⃣ Plugin inicial interceptador completo
