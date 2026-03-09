@@ -1,81 +1,56 @@
-A seguir está o **PROMPT FINAL COMPLETO** do seu projeto **Melitools Framework**, já consolidando **tudo que você definiu**:
+# PROMPT FINAL — MELITOOLS FRAMEWORK V3
 
-* framework **open**
-* **TypeScript**
-* **build para Tampermonkey**
-* **plugins remotos do GitHub**
-* **SHA256 integridade**
-* **cache**
-* **hot reload**
-* **tema Mercado Livre futurista**
-* **primeiro plugin interceptador**
-
-Também segue o padrão correto de **userscript metadata header**, que é o bloco `// ==UserScript==` usado por gerenciadores como Tampermonkey para definir nome, versão, permissões e páginas onde o script roda. ([violentmonkey.github.io][1])
-
----
-
-# PROMPT FINAL — MELITOOLS FRAMEWORK
+Arquitetura final baseada em **Tampermonkey `@require` Plugin System**.
 
 ---
 
 # Visão Geral
 
-Melitools é um **framework modular de automação para Tampermonkey**, projetado para:
+Melitools é um **framework modular para Tampermonkey** que permite:
 
-* automação de workflows
-* carregamento dinâmico de plugins
-* atualização automática
-* execução isolada
-* desenvolvimento rápido
+- automação de workflows
+- sistema de plugins
+- desenvolvimento modular
+- UI moderna
+- hot reload durante desenvolvimento
 
-O framework possui:
+O framework é **open-source** e **sem sistema de licença**.
 
-* **core compilado**
-* **plugins remotos carregados dinamicamente**
-* **hot reload**
-* **sistema de integridade SHA256**
+---
 
-O framework é **livre e open**.
+# Princípios do Framework
 
-Não existe:
+### 1 — Open Framework
 
-* sistema de licença
-* DRM
-* autenticação obrigatória
+Não possui:
+
+```
+licensing
+DRM
+tokens
+ativação
+```
+
+Framework é **livre**.
 
 ---
 
 # Arquitetura Geral
 
 ```
-Melitools Framework
+Melitools
 │
 ├ Core Engine
-├ Plugin Loader
-├ Plugin Cache
-├ Integrity System (SHA256)
 ├ Plugin API
 ├ Event Bus
-├ Update Manager
-├ Hot Reload System
 ├ UI System
-└ Theme System
+├ Theme System
+└ Plugins (@require)
 ```
 
 ---
 
-# Tecnologias
-
-```
-TypeScript
-pnpm
-esbuild
-Tampermonkey
-```
-
----
-
-# Estrutura do Projeto
+# Estrutura do Repositório
 
 ```
 melitools-framework
@@ -85,25 +60,15 @@ melitools-framework
 │  ├ core
 │  │
 │  │   framework.ts
-│  │   loader.ts
-│  │   update-manager.ts
-│  │   cache.ts
-│  │   integrity.ts
-│  │   sandbox.ts
-│  │   plugin-api.ts
+│  │   api.ts
 │  │   event-bus.ts
-│  │   hot-reload.ts
+│  │   ui.ts
 │  │
 │  ├ plugins
 │  │
-│  │   plugin-list.json
-│  │   interceptor.js
-│  │
-│  ├ ui
-│  │
-│  │   theme.ts
-│  │   dashboard.ts
-│  │
+│  │   interceptor.plugin.js
+│  │   future-plugin.js
+│
 │  └ index.ts
 │
 ├ tampermonkey.user.js
@@ -114,302 +79,127 @@ melitools-framework
 
 ---
 
-# Distribuição do Framework
+# Build do Framework
 
-A distribuição contém **apenas o core compilado**.
-
-Plugins **não são incluídos no build**.
-
-O framework baixa plugins diretamente do GitHub.
-
----
-
-# Repositório de Plugins
-
-Plugins ficam no mesmo repo:
+Build gera:
 
 ```
-https://github.com/LucasWG/melitools-framework
+melitools.user.js
 ```
 
-Localização:
+Pipeline:
 
 ```
-src/plugins
+TypeScript
+↓
+esbuild bundle
+↓
+merge header
+↓
+userscript final
 ```
 
 ---
 
-# Registry de Plugins
+# Header Tampermonkey
 
 Arquivo:
 
 ```
-src/plugins/plugin-list.json
+tampermonkey.user.js
 ```
 
 Exemplo:
 
-```json
-{
-  "plugins":[
-    {
-      "name":"interceptor",
-      "version":"1.0.0",
-      "file":"interceptor.js",
-      "sha256":"PLUGIN_HASH"
-    }
-  ]
-}
+```javascript
+// ==UserScript==
+// @name         Melitools Framework
+// @namespace    https://github.com/LucasWG
+// @version      1.0.0
+// @description  Modular automation framework
+// @match        *://*/*
+
+// plugins
+// @require https://raw.githubusercontent.com/LucasWG/melitools-framework/main/src/plugins/interceptor.plugin.js
+
+// permissions
+// @grant GM_addStyle
+// @grant GM_setValue
+// @grant GM_getValue
+
+// ==/UserScript==
 ```
+
+O Tampermonkey irá **carregar todos arquivos `@require` antes do script principal**, permitindo modularizar o código em vários arquivos. ([Stack Overflow][2])
 
 ---
 
-# Download de Plugins
-
-O framework consulta:
+# Ordem de Execução
 
 ```
-https://raw.githubusercontent.com/LucasWG/melitools-framework/main/src/plugins/plugin-list.json
-```
-
-Depois baixa o plugin:
-
-```
-https://raw.githubusercontent.com/LucasWG/melitools-framework/main/src/plugins/interceptor.js
-```
-
----
-
-# Fluxo de Inicialização
-
-```
-framework start
-↓
-load plugin registry
-↓
-compare cache
-↓
-download missing plugins
-↓
-verify SHA256
-↓
-store cache
-↓
-execute plugins
-↓
-framework ready
-```
-
----
-
-# Cache de Plugins
-
-Plugins ficam armazenados usando API do Tampermonkey:
-
-```
-GM_setValue
-GM_getValue
-```
-
-Exemplo:
-
-```
-plugin_cache = {
-  interceptor:{
-    version:"1.0.0",
-    code:"...",
-    sha256:"..."
-  }
-}
-```
-
----
-
-# Verificação de Integridade
-
-Todos plugins possuem hash SHA256.
-
-Antes de executar:
-
-```
-download plugin
-↓
-calculate sha256
-↓
-compare manifest
-↓
-execute
-```
-
-Implementação:
-
-```ts
-async function sha256(text:string){
-
- const data = new TextEncoder().encode(text)
-
- const hash = await crypto.subtle.digest("SHA-256",data)
-
- return [...new Uint8Array(hash)]
-   .map(b => b.toString(16).padStart(2,"0"))
-   .join("")
-}
-```
-
----
-
-# Plugin Loader
-
-Responsável por:
-
-```
-download
-validate
-cache
-execute
-```
-
-Exemplo:
-
-```ts
-async function loadPlugin(plugin){
-
- const code = await fetch(plugin.url).then(r=>r.text())
-
- const hash = await sha256(code)
-
- if(hash !== plugin.sha256)
-    throw new Error("Plugin integrity failed")
-
- executePlugin(code)
-
-}
-```
-
----
-
-# Sandbox de Plugin
-
-Plugins executam em contexto controlado.
-
-```
-sandbox
+Tampermonkey
 │
-├ api
-├ events
-└ storage
+├ carrega plugins @require
+├ executa plugin files
+└ executa core framework
 ```
 
-Execução:
+---
 
-```ts
-function executePlugin(code){
+# Registro de Plugins
 
- const sandbox = {
-   api: PluginAPI,
-   events: EventBus
- }
+Plugins registram-se automaticamente no framework.
 
- const fn = new Function("sandbox", code)
+Exemplo:
 
- fn(sandbox)
-
-}
+```
+window.Melitools.registerPlugin(plugin)
 ```
 
 ---
 
 # Plugin API
 
-Disponível para plugins:
+O framework expõe API global.
 
 ```
-api.log()
-api.storage()
-api.events()
-api.ui()
+window.Melitools
+```
+
+API:
+
+```
+registerPlugin()
+log()
+events
+storage
+ui
 ```
 
 ---
 
 # Event Bus
 
-Sistema interno de eventos.
+Comunicação entre plugins.
 
 ```
-events.on()
-events.emit()
-events.off()
-```
-
-Exemplo:
-
-```
-events.emit("page-loaded")
-```
-
----
-
-# Sistema de Atualização
-
-O framework verifica atualizações automaticamente.
-
-Intervalo:
-
-```
-60s
-```
-
-Fluxo:
-
-```
-check plugin-list
-↓
-compare versions
-↓
-download plugin
-↓
-verify SHA256
-↓
-replace cache
-↓
-reload plugin
-```
-
----
-
-# Hot Reload
-
-Quando um plugin muda:
-
-```
-unload plugin
-↓
-download new version
-↓
-reload plugin
-```
-
-Implementação:
-
-```
-setInterval(checkUpdates,60000)
+Melitools.events.on()
+Melitools.events.emit()
+Melitools.events.off()
 ```
 
 ---
 
 # Sistema UI
 
-Interface do framework:
+Framework inclui painel.
 
 ```
 Melitools Dashboard
 │
 ├ Plugins
-├ Updates
 ├ Logs
-└ Settings
+├ Settings
 ```
 
 Hotkey:
@@ -422,7 +212,7 @@ CTRL + SHIFT + M
 
 # Tema do Framework
 
-Tema oficial:
+Tema:
 
 ```
 Mercado Livre Futurista
@@ -432,9 +222,9 @@ Características:
 
 ```
 glass UI
-soft glow
-rounded edges
-neon accents
+neon glow
+soft shadows
+rounded corners
 ```
 
 ---
@@ -452,111 +242,53 @@ text      #EAEAEA
 
 ---
 
-# Componentes UI
+# Hot Reload (Modo Desenvolvimento)
+
+Durante desenvolvimento:
 
 ```
-modal
-toast
-panel
-floating menu
-plugin dashboard
+@require http://localhost:5173/interceptor.plugin.js
 ```
 
----
-
-# Build System
-
-Framework escrito em:
+Fluxo:
 
 ```
-TypeScript
-```
-
-Build:
-
-```
-pnpm build
-```
-
-Pipeline:
-
-```
-typescript
+editar plugin
 ↓
-esbuild bundle
+salvar
 ↓
-merge header
+reload página
 ↓
-generate userscript
+plugin atualizado
 ```
 
 ---
 
-# Header Tampermonkey
+# Plugin Lifecycle
 
-Arquivo base:
+Cada plugin possui lifecycle.
 
 ```
-tampermonkey.user.js
-```
-
-Exemplo:
-
-```javascript
-// ==UserScript==
-// @name Melitools Framework
-// @namespace https://github.com/LucasWG
-// @version 1.0.0
-// @description Plugin framework
-// @match *://*/*
-// @grant GM_setValue
-// @grant GM_getValue
-// @grant GM_xmlhttpRequest
-// @grant GM_addStyle
-// ==/UserScript==
-```
-
-Esse bloco de metadados é necessário para que o gerenciador de userscripts saiba **nome, permissões e páginas onde o script será executado**. ([MakeUseOf][2])
-
----
-
-# Build Config
-
-Exemplo:
-
-```ts
-import esbuild from "esbuild"
-import fs from "fs"
-
-await esbuild.build({
- entryPoints:["src/index.ts"],
- bundle:true,
- outfile:"dist/core.js",
- format:"iife"
-})
-
-const header = fs.readFileSync("tampermonkey.user.js","utf8")
-const code = fs.readFileSync("dist/core.js","utf8")
-
-fs.writeFileSync(
- "dist/melitools.user.js",
- header + "\n" + code
-)
+init
+start
+stop
 ```
 
 ---
 
-# Plugin Inicial
-
-Plugin:
+# Estrutura de Plugin
 
 ```
-interceptor.js
+interceptor.plugin.js
 ```
+
+---
+
+# Plugin Inicial — Interceptador Inteligente
 
 Objetivo:
 
-Interceptar entradas de:
+Interceptar entradas vindas de:
 
 ```
 CTRL + V
@@ -597,7 +329,7 @@ Chave rastreio
 
 ### ID
 
-Redirecionar:
+Redirecionar para:
 
 ```
 https://envios.adminml.com/logistics/package-management/package/{ID}
@@ -615,9 +347,7 @@ https://shipping-bo.adminml.com/sauron/shipments/shipment/{ID}
 
 ```
 sanitizar
-↓
 preencher input ativo
-↓
 não redirecionar
 ```
 
@@ -626,114 +356,130 @@ não redirecionar
 # Código do Plugin
 
 ```javascript
-export default function(api){
+;(function () {
+	const plugin = {
+		name: 'interceptor',
 
- function sanitize(value){
-   return value.replace(/\D/g,"")
- }
+		start() {
+			function sanitize(v) {
+				return v.replace(/\D/g, '')
+			}
 
- function detect(value){
+			function detect(v) {
+				if (v.length === 11) return 'package'
 
-   if(value.length === 11) return "package"
+				if (v.length === 44) return 'tracking'
+			}
 
-   if(value.length === 44) return "tracking"
+			function handle(v) {
+				const clean = sanitize(v)
 
-   return null
- }
+				const type = detect(clean)
 
- function handle(value){
+				if (type === 'package') {
+					window.location.href = `https://envios.adminml.com/logistics/package-management/package/${clean}`
+				}
 
-   const clean = sanitize(value)
+				if (type === 'tracking') {
+					const el = document.activeElement
 
-   const type = detect(clean)
+					if (el && el.tagName === 'INPUT') {
+						el.value = clean
+					}
+				}
+			}
 
-   if(!type) return
+			document.addEventListener('paste', e => {
+				const text = e.clipboardData?.getData('text')
 
-   if(type === "package"){
+				if (text) handle(text)
+			})
 
-     const url =
-     `https://envios.adminml.com/logistics/package-management/package/${clean}`
+			let buffer = ''
+			let last = 0
 
-     window.location.href = url
+			document.addEventListener('keydown', e => {
+				const now = Date.now()
 
-     return
-   }
+				if (now - last > 50) buffer = ''
 
-   if(type === "tracking"){
+				last = now
 
-     const el = document.activeElement
+				if (e.key === 'Enter') {
+					handle(buffer)
 
-     if(el && (el.tagName==="INPUT"||el.tagName==="TEXTAREA")){
+					buffer = ''
 
-       el.value = clean
+					return
+				}
 
-       el.dispatchEvent(new Event("input",{bubbles:true}))
+				buffer += e.key
+			})
+		}
+	}
 
-     }
-
-   }
-
- }
-
- document.addEventListener("paste",(e)=>{
-
-   const text = e.clipboardData?.getData("text")
-
-   if(text) handle(text)
-
- })
-
- let buffer=""
- let last=0
-
- document.addEventListener("keydown",(e)=>{
-
-   const now = Date.now()
-
-   if(now-last>50) buffer=""
-
-   last=now
-
-   if(e.key==="Enter"){
-     handle(buffer)
-     buffer=""
-     return
-   }
-
-   buffer+=e.key
-
- })
-
-}
+	window.Melitools.registerPlugin(plugin)
+})()
 ```
+
+---
+
+# Inicialização do Core
+
+Core inicia após carregar plugins.
+
+```
+Melitools.init()
+```
+
+Fluxo:
+
+```
+load plugins
+↓
+register plugins
+↓
+start plugins
+↓
+framework ready
+```
+
+---
+
+# Vantagens dessa Arquitetura
+
+✔ compatível com CSP
+✔ não usa `eval`
+✔ não usa `dynamic import`
+✔ plugins modulares
+✔ simples
+✔ robusto
 
 ---
 
 # Resultado
 
-O Melitools Framework terá:
+Melitools Framework terá:
 
 ```
+plugin system
 core leve
-plugins remotos
-cache local
-hot reload
-integridade SHA256
+modularidade
+CSP safe
 UI moderna
 automação logística
 ```
 
 ---
 
-✅ Se quiser, posso também te entregar a **VERSÃO 2 DO PROMPT (muito mais poderosa)** com:
+**“Plugin Bundler automático”**
 
-* **plugin permissions**
-* **plugin dependencies**
-* **plugin marketplace**
-* **plugin dev mode (live reload instantâneo)**
-* **CLI do framework**
+Ele faz o build gerar automaticamente:
 
-que deixaria seu projeto **nível VSCode plugin architecture**.
+```
+@require plugin1
+@require plugin2
+@require plugin3
+```
 
-[1]: https://violentmonkey.github.io/api/metadata-block/?utm_source=chatgpt.com "Metadata Block - Violentmonkey"
-[2]: https://www.makeuseof.com/make-inspect-element-changes-permanent-tampermonkey/?utm_source=chatgpt.com "How to Make Inspect Element Changes Permanent in Your Browser with Tampermonkey"
+a partir da pasta `/plugins`.

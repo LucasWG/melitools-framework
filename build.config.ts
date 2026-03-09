@@ -4,26 +4,47 @@ import fs from 'fs'
 	const args = process.argv.slice(2)
 	const watch = args.includes('--watch')
 
-	// esbuild types are slightly different between versions; cast to any to avoid errors
-	const buildOpts: any = {
+	// esbuild options used for bundling the core logic
+	const baseOpts: any = {
 		entryPoints: ['src/index.ts'],
 		bundle: true,
-		outfile: 'dist/core.js',
 		format: 'iife',
 		sourcemap: watch
 	}
 
 	if (watch) {
-		// if watch requested, use context API
-		const ctx = await esbuild.context(buildOpts)
+		// watch mode still writes core.js so esbuild's context can reuse it
+		const ctx = await esbuild.context({ ...baseOpts, outfile: 'dist/core.js' })
 		await ctx.watch()
-	} else {
-		await esbuild.build(buildOpts)
+		return
 	}
 
-	await esbuild.build(buildOpts)
-	const header = fs.readFileSync('tampermonkey.user.js', 'utf8')
-	const code = fs.readFileSync('dist/core.js', 'utf8')
+	// production build: emit to memory and stitch with header
+	const result = await esbuild.build({ ...baseOpts, write: false })
+	const code = result.outputFiles?.[0]?.text ?? ''
+
+	// read template header and insert plugin requires
+	let header = fs.readFileSync('tampermonkey.user.js', 'utf8')
+	const pluginsDir = 'src/plugins'
+	const pluginFiles = fs.existsSync(pluginsDir)
+		? fs.readdirSync(pluginsDir).filter(f => f.endsWith('.js'))
+		: []
+	const requireLines = pluginFiles
+		.map(
+			f =>
+				`// @require https://raw.githubusercontent.com/LucasWG/melitools-framework/main/src/plugins/${f}`
+		)
+		.join('\n')
+	if (header.includes('// @plugins')) {
+		header = header.replace('// @plugins', requireLines)
+	} else {
+		header += '\n' + requireLines
+	}
+
 	fs.writeFileSync('dist/melitools.user.js', header + '\n' + code)
 	console.log('output written to dist/melitools.user.js')
+	// clean up leftover file if esbuild ever created it
+	try {
+		fs.unlinkSync('dist/core.js')
+	} catch {}
 })()
