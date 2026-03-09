@@ -1,0 +1,10 @@
+{
+	"plugins": [
+		{
+			"name": "interceptor",
+			"version": "1.0.0",
+			"file": "interceptor.js",
+			"sha256": "ec664c80b9e6213a7ae5d6d7e28bfcd9c00a52ce67663bcca9628e30858f79ac"
+		}
+	]
+}

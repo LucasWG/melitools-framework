@@ -1,573 +1,566 @@
-# PROMPT ULTRA COMPLETO — FRAMEWORK PROFISSIONAL DE AUTOMAÇÃO TAMPERMONKEY COM PLUGINS REMOTOS
+A seguir está o **PROMPT FINAL COMPLETO** do seu projeto **Melitools Framework**, já consolidando **tudo que você definiu**:
 
-## Papel da IA
+* framework **open**
+* **TypeScript**
+* **build para Tampermonkey**
+* **plugins remotos do GitHub**
+* **SHA256 integridade**
+* **cache**
+* **hot reload**
+* **tema Mercado Livre futurista**
+* **primeiro plugin interceptador**
 
-Atue como um **Engenheiro de Software Sênior especializado em automação de navegador utilizando JavaScript puro (Vanilla JS) e Tampermonkey**, com experiência em:
-
-- arquiteturas modulares
-- sistemas de plugins
-- sandbox de execução
-- carregamento remoto de scripts
-- segurança de código remoto
-- controle de permissões
-- cache offline
-- interfaces modernas
-- automação corporativa
-- otimização de performance
-
-O código gerado deve ser **robusto o suficiente para uso real em ambiente corporativo**.
-Priorize sempre:
-
-- estabilidade
-- previsibilidade
-- segurança
-- performance
-- arquitetura extensível
-- baixo impacto no DOM
-
-Evite soluções improvisadas.
+Também segue o padrão correto de **userscript metadata header**, que é o bloco `// ==UserScript==` usado por gerenciadores como Tampermonkey para definir nome, versão, permissões e páginas onde o script roda. ([violentmonkey.github.io][1])
 
 ---
 
-# Objetivo do Projeto
+# PROMPT FINAL — MELITOOLS FRAMEWORK
 
-Criar um **Framework de Automação Tampermonkey profissional**, capaz de:
+---
 
-- carregar plugins remotamente
-- atualizar plugins automaticamente
-- manter cache offline
-- oferecer sistema de plugins modular
-- executar plugins em sandbox
-- garantir integridade de código
-- validar licença remotamente via GitHub
-- oferecer interface moderna
-- suportar hot reload
-- bloquear execução remotamente (Kill Switch)
+# Visão Geral
+
+Melitools é um **framework modular de automação para Tampermonkey**, projetado para:
+
+* automação de workflows
+* carregamento dinâmico de plugins
+* atualização automática
+* execução isolada
+* desenvolvimento rápido
+
+O framework possui:
+
+* **core compilado**
+* **plugins remotos carregados dinamicamente**
+* **hot reload**
+* **sistema de integridade SHA256**
+
+O framework é **livre e open**.
+
+Não existe:
+
+* sistema de licença
+* DRM
+* autenticação obrigatória
 
 ---
 
 # Arquitetura Geral
 
 ```
-Automation Framework
+Melitools Framework
 │
-├── Core
-│   ├── LicenseManager
-│   ├── PluginManager
-│   ├── PluginSandbox
-│   ├── RemoteLoader
-│   ├── CacheManager
-│   ├── UpdateManager
-│   ├── PermissionManager
-│   ├── SecurityManager
-│   ├── KillSwitchManager
-│   ├── UIManager
-│   ├── ToastManager
-│   ├── ShortcutManager
-│   └── DebugLogger
-│
-├── Storage
-│   ├── IndexedDB
-│   └── LocalStorage (fallback)
-│
-└── Remote
-    ├── framework.json
-    ├── licenses.json
-    ├── plugins/index.json
-    └── plugins/*
-
+├ Core Engine
+├ Plugin Loader
+├ Plugin Cache
+├ Integrity System (SHA256)
+├ Plugin API
+├ Event Bus
+├ Update Manager
+├ Hot Reload System
+├ UI System
+└ Theme System
 ```
 
 ---
 
-# Sistema de Autenticação de Licença
+# Tecnologias
 
-O framework utiliza um sistema de **validação remota de chaves**.
-
-Se não houver licença salva localmente:
-
-- O framework pausa a execução.
-- Exibe um Modal/Prompt bloqueando a tela.
-- Solicita ao usuário a inserção da chave de licença.
+```
+TypeScript
+pnpm
+esbuild
+Tampermonkey
+```
 
 ---
 
-# Estrutura Remota de Licenças (GitHub)
+# Estrutura do Projeto
 
-O framework fará um `fetch` em um arquivo remoto hospedado no repositório.
+```
+melitools-framework
+│
+├ src
+│
+│  ├ core
+│  │
+│  │   framework.ts
+│  │   loader.ts
+│  │   update-manager.ts
+│  │   cache.ts
+│  │   integrity.ts
+│  │   sandbox.ts
+│  │   plugin-api.ts
+│  │   event-bus.ts
+│  │   hot-reload.ts
+│  │
+│  ├ plugins
+│  │
+│  │   plugin-list.json
+│  │   interceptor.js
+│  │
+│  ├ ui
+│  │
+│  │   theme.ts
+│  │   dashboard.ts
+│  │
+│  └ index.ts
+│
+├ tampermonkey.user.js
+├ build.config.ts
+├ tsconfig.json
+└ package.json
+```
 
-Arquivo: `licenses.json`
+---
+
+# Distribuição do Framework
+
+A distribuição contém **apenas o core compilado**.
+
+Plugins **não são incluídos no build**.
+
+O framework baixa plugins diretamente do GitHub.
+
+---
+
+# Repositório de Plugins
+
+Plugins ficam no mesmo repo:
+
+```
+https://github.com/LucasWG/melitools-framework
+```
+
+Localização:
+
+```
+src/plugins
+```
+
+---
+
+# Registry de Plugins
+
+Arquivo:
+
+```
+src/plugins/plugin-list.json
+```
+
+Exemplo:
 
 ```json
 {
-	"ABCD-1234-EFGH-5678": {
-		"user": "joao",
-		"active": true,
-		"plugins": ["*"]
-	},
-	"WXYZ-9876-LMNO-4321": {
-		"user": "maria",
-		"active": true,
-		"plugins": ["inputInterceptor"]
-	}
+  "plugins":[
+    {
+      "name":"interceptor",
+      "version":"1.0.0",
+      "file":"interceptor.js",
+      "sha256":"PLUGIN_HASH"
+    }
+  ]
 }
 ```
 
 ---
 
-# Fluxo de Validação da Licença
+# Download de Plugins
 
-Fluxo de inicialização do `LicenseManager`:
+O framework consulta:
 
 ```
-iniciar framework
-↓
-verificar licença no IndexedDB / localStorage
-↓
-se NÃO existir → mostrar Modal de Licença
-↓
-usuário insere chave e clica em "Validar"
-↓
-baixar licenses.json do GitHub
-↓
-verificar se chave existe no JSON
-↓
-se NÃO existir ou active == false → exibir erro (toast) e manter bloqueado
-↓
-se válida → salvar chave no cache local, fechar modal e iniciar Plugins
+https://raw.githubusercontent.com/LucasWG/melitools-framework/main/src/plugins/plugin-list.json
+```
 
+Depois baixa o plugin:
+
+```
+https://raw.githubusercontent.com/LucasWG/melitools-framework/main/src/plugins/interceptor.js
 ```
 
 ---
 
-# Sistema de Permissões e Revogação
-
-As permissões de quais plugins o usuário pode rodar são extraídas diretamente do `licenses.json` remoto após a validação.
-
-Se a chave for comprometida, o administrador altera no GitHub:
-
-```json
-"active": false
+# Fluxo de Inicialização
 
 ```
-
-Na próxima inicialização (ou verificação periódica), o `LicenseManager` detecta a chave inativa, apaga o cache local e exibe o Modal solicitando uma nova chave.
-
----
-
-# Interface de Captura de Licença
-
-Visual do Modal de Autenticação:
-
-- Fundo escurecido (backdrop blur).
-- Caixa centralizada com logotipo ou título do framework.
-- Input de texto limpo para a chave.
-- Botão "Validar Licença" com estado de _loading_ durante o `fetch`.
-- Estilo alinhado ao padrão visual definido (inspirado no Mercado Livre, bordas arredondadas, sombra suave).
-
----
-
-# Sistema de Plugins Remotos
-
-Estrutura no repositório:
-
-```
-repo
-│
-├── framework.json
-├── licenses.json
-│
-├── plugins
-│   │
-│   ├── index.json
-│   │
-│   ├── input-interceptor
-│   │   ├── plugin.json
-│   │   └── plugin.js
-│   │
-│   └── scanner-helper
-│       ├── plugin.json
-│       └── plugin.js
-
+framework start
+↓
+load plugin registry
+↓
+compare cache
+↓
+download missing plugins
+↓
+verify SHA256
+↓
+store cache
+↓
+execute plugins
+↓
+framework ready
 ```
 
 ---
 
-# Arquivo de Índice de Plugins
+# Cache de Plugins
 
-`plugins/index.json`
+Plugins ficam armazenados usando API do Tampermonkey:
 
-```json
-{
-	"plugins": {
-		"inputInterceptor": "1.0.0",
-		"scannerHelper": "2.1.0"
-	}
+```
+GM_setValue
+GM_getValue
+```
+
+Exemplo:
+
+```
+plugin_cache = {
+  interceptor:{
+    version:"1.0.0",
+    code:"...",
+    sha256:"..."
+  }
 }
 ```
 
 ---
 
-# Objetivo do Index
+# Verificação de Integridade
 
-Permitir:
+Todos plugins possuem hash SHA256.
 
-- verificar atualizações rapidamente
-- evitar downloads desnecessários
-- reduzir chamadas ao GitHub
-
----
-
-# Manifesto do Plugin
-
-`plugin.json`
-
-```json
-{
-	"id": "inputInterceptor",
-	"name": "Interceptador Inteligente",
-	"version": "1.0.0",
-	"entry": "plugin.js",
-	"sha256": "HASH_DO_PLUGIN",
-	"signature": "ASSINATURA_DO_PLUGIN",
-	"permissions": ["events.listen", "dom.read", "dom.write", "navigation.redirect"],
-	"domains": ["adminml.com", "mercadolivre.com"]
-}
-```
-
----
-
-# Validação de Segurança do Plugin
-
-Fluxo:
+Antes de executar:
 
 ```
-baixar plugin.json
+download plugin
 ↓
-baixar plugin.js
+calculate sha256
 ↓
-calcular SHA256
+compare manifest
 ↓
-comparar com manifesto
-↓
-verificar assinatura digital
-↓
-se válido → executar
-↓
-se inválido → bloquear plugin
-
+execute
 ```
-
----
-
-# Sandbox Real de Plugins
-
-Plugins **não devem executar diretamente no escopo global**.
-Devem rodar dentro de uma sandbox controlada.
 
 Implementação:
 
-```
-PluginSandbox
+```ts
+async function sha256(text:string){
 
+ const data = new TextEncoder().encode(text)
+
+ const hash = await crypto.subtle.digest("SHA-256",data)
+
+ return [...new Uint8Array(hash)]
+   .map(b => b.toString(16).padStart(2,"0"))
+   .join("")
+}
+```
+
+---
+
+# Plugin Loader
+
+Responsável por:
+
+```
+download
+validate
+cache
+execute
+```
+
+Exemplo:
+
+```ts
+async function loadPlugin(plugin){
+
+ const code = await fetch(plugin.url).then(r=>r.text())
+
+ const hash = await sha256(code)
+
+ if(hash !== plugin.sha256)
+    throw new Error("Plugin integrity failed")
+
+ executePlugin(code)
+
+}
+```
+
+---
+
+# Sandbox de Plugin
+
+Plugins executam em contexto controlado.
+
+```
+sandbox
+│
+├ api
+├ events
+└ storage
 ```
 
 Execução:
 
-```javascript
-function runPlugin(pluginCode, api) {
-	const sandbox = {
-		API: api,
-		console: console
-	}
+```ts
+function executePlugin(code){
 
-	const keys = Object.keys(sandbox)
-	const values = Object.values(sandbox)
+ const sandbox = {
+   api: PluginAPI,
+   events: EventBus
+ }
 
-	const fn = new Function(...keys, pluginCode)
+ const fn = new Function("sandbox", code)
 
-	fn(...values)
+ fn(sandbox)
+
 }
 ```
 
-Plugins **não recebem acesso direto a:**
+---
+
+# Plugin API
+
+Disponível para plugins:
 
 ```
-window
-document
-localStorage
-cookies
-fetch
-
+api.log()
+api.storage()
+api.events()
+api.ui()
 ```
-
-Somente APIs controladas.
 
 ---
 
-# API Disponível para Plugins
+# Event Bus
+
+Sistema interno de eventos.
+
+```
+events.on()
+events.emit()
+events.off()
+```
 
 Exemplo:
 
-```javascript
-API.events.on(event, handler)
-
-API.navigation.redirect(url)
-
-API.dom.read(selector)
-
-API.dom.write(selector, value)
-
-API.toast.info(message)
+```
+events.emit("page-loaded")
 ```
 
 ---
 
-# Sistema de Cache Inteligente
+# Sistema de Atualização
 
-Plugins devem funcionar **offline**.
-Prioridade de armazenamento:
+O framework verifica atualizações automaticamente.
 
-```
-IndexedDB
+Intervalo:
 
 ```
-
-Fallback:
-
-```
-localStorage
-
-```
-
----
-
-# Estrutura de Cache
-
-```
-cache
-│
-├── plugin-id
-│   ├── version
-│   ├── code
-│   └── hash
-
-```
-
----
-
-# Fluxo de Cache
-
-```
-carregar plugin
-↓
-verificar cache
-↓
-se versão igual → usar cache
-↓
-se versão diferente → baixar
-↓
-validar hash
-↓
-salvar cache
-
-```
-
----
-
-# Atualização Automática
-
-Atualização deve usar:
-
-```
-plugins/index.json
-
+60s
 ```
 
 Fluxo:
 
 ```
-verificar versão remota
+check plugin-list
 ↓
-comparar com versão local
+compare versions
 ↓
-se diferente
+download plugin
 ↓
-baixar plugin
+verify SHA256
 ↓
-validar segurança
+replace cache
 ↓
-atualizar cache
-↓
-executar hot reload
-
+reload plugin
 ```
 
 ---
 
 # Hot Reload
 
-Fluxo:
+Quando um plugin muda:
 
 ```
-plugin antigo destroy()
+unload plugin
 ↓
-remover listeners
+download new version
 ↓
-carregar nova versão
-↓
-init()
+reload plugin
+```
 
+Implementação:
+
+```
+setInterval(checkUpdates,60000)
 ```
 
 ---
 
-# Sistema de Kill Switch
+# Sistema UI
 
-Arquivo remoto:
-
-```
-framework.json
+Interface do framework:
 
 ```
-
-Exemplo:
-
-```json
-{
-	"enabled": true,
-	"minVersion": "1.0.0"
-}
+Melitools Dashboard
+│
+├ Plugins
+├ Updates
+├ Logs
+└ Settings
 ```
 
----
-
-# Comportamento
-
-Framework verifica no início:
+Hotkey:
 
 ```
-framework.json
-
-```
-
-Se:
-
-```
-enabled = false
-
-```
-
-Framework:
-
-```
-desativa imediatamente
-mostra mensagem
-não carrega plugins
-
+CTRL + SHIFT + M
 ```
 
 ---
 
-# Controle de Versão do Framework
+# Tema do Framework
 
-Se:
-
-```
-framework.version < minVersion
+Tema oficial:
 
 ```
-
-Framework:
-
-```
-bloqueia execução
-solicita atualização
-
-```
-
----
-
-# Sistema de Toast
-
-Tipos:
-
-```
-info
-success
-warning
-error
-download-progress
-
-```
-
-Posição:
-
-```
-canto inferior direito
-
-```
-
----
-
-# Interface do Framework
-
-Estilo visual inspirado em:
-
-```
-Mercado Livre
-
+Mercado Livre Futurista
 ```
 
 Características:
 
-- modal central
-- bordas arredondadas
-- sombra suave
-- responsivo
-- leve
-
----
-
-# Atalho Global
-
-Abrir painel:
-
 ```
-ALT + Q
-
+glass UI
+soft glow
+rounded edges
+neon accents
 ```
 
 ---
 
-# Menu de Plugins
-
-Interface deve mostrar:
+# Paleta de Cores
 
 ```
-☑ Interceptador Inteligente ⚙
-☐ Scanner Helper
-
+primary   #FFE600
+secondary #2D3277
+accent    #3483FA
+bg        #0F1115
+surface   #1A1D24
+text      #EAEAEA
 ```
-
-Exibir:
-
-- toggle ON/OFF
-- versão instalada
-- atualização disponível
 
 ---
 
-# Plugin Inicial — Interceptador Inteligente
+# Componentes UI
+
+```
+modal
+toast
+panel
+floating menu
+plugin dashboard
+```
+
+---
+
+# Build System
+
+Framework escrito em:
+
+```
+TypeScript
+```
+
+Build:
+
+```
+pnpm build
+```
+
+Pipeline:
+
+```
+typescript
+↓
+esbuild bundle
+↓
+merge header
+↓
+generate userscript
+```
+
+---
+
+# Header Tampermonkey
+
+Arquivo base:
+
+```
+tampermonkey.user.js
+```
+
+Exemplo:
+
+```javascript
+// ==UserScript==
+// @name Melitools Framework
+// @namespace https://github.com/LucasWG
+// @version 1.0.0
+// @description Plugin framework
+// @match *://*/*
+// @grant GM_setValue
+// @grant GM_getValue
+// @grant GM_xmlhttpRequest
+// @grant GM_addStyle
+// ==/UserScript==
+```
+
+Esse bloco de metadados é necessário para que o gerenciador de userscripts saiba **nome, permissões e páginas onde o script será executado**. ([MakeUseOf][2])
+
+---
+
+# Build Config
+
+Exemplo:
+
+```ts
+import esbuild from "esbuild"
+import fs from "fs"
+
+await esbuild.build({
+ entryPoints:["src/index.ts"],
+ bundle:true,
+ outfile:"dist/core.js",
+ format:"iife"
+})
+
+const header = fs.readFileSync("tampermonkey.user.js","utf8")
+const code = fs.readFileSync("dist/core.js","utf8")
+
+fs.writeFileSync(
+ "dist/melitools.user.js",
+ header + "\n" + code
+)
+```
+
+---
+
+# Plugin Inicial
+
+Plugin:
+
+```
+interceptor.js
+```
 
 Objetivo:
 
-Interceptar entradas vindas de:
+Interceptar entradas de:
 
 ```
 CTRL + V
-leitores de código de barras
-
+barcode scanner
 ```
 
 ---
@@ -578,7 +571,6 @@ Regex:
 
 ```
 /\D/g
-
 ```
 
 Remove tudo que não for número.
@@ -587,18 +579,16 @@ Remove tudo que não for número.
 
 # Padrões Detectados
 
-### ID de pacote
+ID pacote
 
 ```
 11 dígitos
-
 ```
 
-### Chave de rastreio
+Chave rastreio
 
 ```
 44 dígitos
-
 ```
 
 ---
@@ -607,18 +597,16 @@ Remove tudo que não for número.
 
 ### ID
 
-Redirecionar para:
+Redirecionar:
 
 ```
 https://envios.adminml.com/logistics/package-management/package/{ID}
-
 ```
 
 ou
 
 ```
 https://shipping-bo.adminml.com/sauron/shipments/shipment/{ID}
-
 ```
 
 ---
@@ -627,57 +615,125 @@ https://shipping-bo.adminml.com/sauron/shipments/shipment/{ID}
 
 ```
 sanitizar
+↓
 preencher input ativo
+↓
 não redirecionar
-
 ```
 
 ---
 
-# Sistema de Debug
-
-Constante global:
+# Código do Plugin
 
 ```javascript
-const DEBUG = false
-```
+export default function(api){
 
-Logs possíveis:
+ function sanitize(value){
+   return value.replace(/\D/g,"")
+ }
 
-```
-[Framework] iniciado
-[License] licença validada
-[License] modal exibido
-[License] chave revogada/inválida
-[Security] hash validado
-[Security] assinatura válida
-[PluginManager] plugin carregado
-[PluginManager] plugin atualizado
-[PluginSandbox] plugin executado
-[Permission] plugin autorizado
-[Permission] plugin bloqueado
-[KillSwitch] framework desativado
-[Interceptor] entrada detectada
+ function detect(value){
 
+   if(value.length === 11) return "package"
+
+   if(value.length === 44) return "tracking"
+
+   return null
+ }
+
+ function handle(value){
+
+   const clean = sanitize(value)
+
+   const type = detect(clean)
+
+   if(!type) return
+
+   if(type === "package"){
+
+     const url =
+     `https://envios.adminml.com/logistics/package-management/package/${clean}`
+
+     window.location.href = url
+
+     return
+   }
+
+   if(type === "tracking"){
+
+     const el = document.activeElement
+
+     if(el && (el.tagName==="INPUT"||el.tagName==="TEXTAREA")){
+
+       el.value = clean
+
+       el.dispatchEvent(new Event("input",{bubbles:true}))
+
+     }
+
+   }
+
+ }
+
+ document.addEventListener("paste",(e)=>{
+
+   const text = e.clipboardData?.getData("text")
+
+   if(text) handle(text)
+
+ })
+
+ let buffer=""
+ let last=0
+
+ document.addEventListener("keydown",(e)=>{
+
+   const now = Date.now()
+
+   if(now-last>50) buffer=""
+
+   last=now
+
+   if(e.key==="Enter"){
+     handle(buffer)
+     buffer=""
+     return
+   }
+
+   buffer+=e.key
+
+ })
+
+}
 ```
 
 ---
 
-# Resultado Esperado da IA
+# Resultado
 
-Gerar um **framework completo funcional** contendo:
+O Melitools Framework terá:
 
-1️⃣ LicenseManager (com verificação remota no GitHub e Modal de UI)
-2️⃣ PluginManager
-3️⃣ PluginSandbox
-4️⃣ RemoteLoader
-5️⃣ CacheManager
-6️⃣ UpdateManager
-7️⃣ PermissionManager
-8️⃣ SecurityManager
-9️⃣ KillSwitchManager
-🔟 Sistema de cache offline
-1️⃣1️⃣ Sistema de atualização automática
-1️⃣2️⃣ UI completa com painel de plugins e Modal de Licença
-1️⃣3️⃣ Atalho global ALT+Q
-1️⃣4️⃣ Plugin inicial interceptador completo
+```
+core leve
+plugins remotos
+cache local
+hot reload
+integridade SHA256
+UI moderna
+automação logística
+```
+
+---
+
+✅ Se quiser, posso também te entregar a **VERSÃO 2 DO PROMPT (muito mais poderosa)** com:
+
+* **plugin permissions**
+* **plugin dependencies**
+* **plugin marketplace**
+* **plugin dev mode (live reload instantâneo)**
+* **CLI do framework**
+
+que deixaria seu projeto **nível VSCode plugin architecture**.
+
+[1]: https://violentmonkey.github.io/api/metadata-block/?utm_source=chatgpt.com "Metadata Block - Violentmonkey"
+[2]: https://www.makeuseof.com/make-inspect-element-changes-permanent-tampermonkey/?utm_source=chatgpt.com "How to Make Inspect Element Changes Permanent in Your Browser with Tampermonkey"

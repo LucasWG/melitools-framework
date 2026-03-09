@@ -1,0 +1,17 @@
+{
+	"name": "melitools-framework",
+	"version": "1.0.0",
+	"description": "Modular automation framework for Tampermonkey",
+	"main": "dist/melitools.user.js",
+	"scripts": {
+		"build": "ts-node build.config.ts",
+		"watch": "ts-node build.config.ts --watch"
+	},
+	"devDependencies": {
+		"esbuild": "^0.18.0",
+		"ts-node": "^10.0.0",
+		"typescript": "^5.0.0",
+		"@types/node": "^20.0.0"
+	},
+	"dependencies": {}
+}
