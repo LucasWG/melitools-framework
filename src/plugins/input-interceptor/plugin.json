@@ -1,10 +1,9 @@
 {
-  "id": "inputInterceptor",
-  "name": "Interceptador Inteligente",
-  "version": "1.0.0",
-  "entry": "plugin.js",
-  "sha256": "e7eceed16c8e9dd863f780a4cf7328c4d570661d4433239313be7e6d3f8d0266",
-  "signature": "",
-  "permissions": ["events.listen", "dom.read", "dom.write", "navigation.redirect"],
-  "domains": ["adminml.com", "mercadolivre.com"]
+	"id": "inputInterceptor",
+	"name": "Interceptador Inteligente",
+	"version": "1.0.0",
+	"entry": "plugin.js",
+	"sha256": "e7eceed16c8e9dd863f780a4cf7328c4d570661d4433239313be7e6d3f8d0266",
+	"permissions": ["events.listen", "dom.read", "dom.write", "navigation.redirect"],
+	"domains": []
 }

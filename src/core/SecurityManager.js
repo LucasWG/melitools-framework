@@ -11,8 +11,7 @@ export class SecurityManager {
 			DebugLogger.error('hash mismatch', hashHex, meta.sha256)
 			return false
 		}
-		// signature check: placeholder
-		// In production you'd verify meta.signature using a public key
+		// only hash verification is performed; signature field removed
 		return true
 	}
 }
