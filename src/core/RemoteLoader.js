@@ -2,7 +2,7 @@ import { DebugLogger } from './DebugLogger.js'
 import { gmFetch } from './Net.js'
 
 const BASE_URL =
-	'https://github.com/LucasWG/melitools-framework/tree/dfe04dcea1ea63b13041a9628c69c334296fa01f/src/plugins'
+	'https://github.com/LucasWG/melitools-framework/tree/dfe04dcea1ea63b13041a9628c69c334296fa01f/src/'
 
 export class RemoteLoader {
 	constructor() {
