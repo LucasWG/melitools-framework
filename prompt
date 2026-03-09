@@ -9,7 +9,6 @@ Atue como um **Engenheiro de Software Sênior especializado em automação de na
 - sandbox de execução
 - carregamento remoto de scripts
 - segurança de código remoto
-- criptografia e verificação de assinatura
 - controle de permissões
 - cache offline
 - interfaces modernas
@@ -17,7 +16,6 @@ Atue como um **Engenheiro de Software Sênior especializado em automação de na
 - otimização de performance
 
 O código gerado deve ser **robusto o suficiente para uso real em ambiente corporativo**.
-
 Priorize sempre:
 
 - estabilidade
@@ -41,7 +39,7 @@ Criar um **Framework de Automação Tampermonkey profissional**, capaz de:
 - oferecer sistema de plugins modular
 - executar plugins em sandbox
 - garantir integridade de código
-- validar licença assinada
+- validar licença remotamente via GitHub
 - oferecer interface moderna
 - suportar hot reload
 - bloquear execução remotamente (Kill Switch)
@@ -74,122 +72,98 @@ Automation Framework
 │
 └── Remote
     ├── framework.json
+    ├── licenses.json
     ├── plugins/index.json
     └── plugins/*
+
 ```
 
 ---
 
-# Sistema de Licença Assinada
+# Sistema de Autenticação de Licença
 
-O framework **não usa token simples**.
+O framework utiliza um sistema de **validação remota de chaves**.
 
-Ele usa uma **licença assinada digitalmente**.
+Se não houver licença salva localmente:
 
-Formato:
-
-```
-BASE64(payload).BASE64(signature)
-```
-
-Exemplo:
-
-```
-eyJ1c2VyIjoiam9hbyIsInBsdWdpbnMiOlsiKiJdLCJleHBpcmVzIjoiMjAyNi0xMi0zMSJ9.XYABCD123
-```
+- O framework pausa a execução.
+- Exibe um Modal/Prompt bloqueando a tela.
+- Solicita ao usuário a inserção da chave de licença.
 
 ---
 
-# Estrutura do Payload da Licença
+# Estrutura Remota de Licenças (GitHub)
+
+O framework fará um `fetch` em um arquivo remoto hospedado no repositório.
+
+Arquivo: `licenses.json`
 
 ```json
 {
-	"user": "joao",
-	"plugins": ["*"],
-	"expires": "2026-12-31"
+	"ABCD-1234-EFGH-5678": {
+		"user": "joao",
+		"active": true,
+		"plugins": ["*"]
+	},
+	"WXYZ-9876-LMNO-4321": {
+		"user": "maria",
+		"active": true,
+		"plugins": ["inputInterceptor"]
+	}
 }
 ```
 
 ---
 
-# Assinatura da Licença
+# Fluxo de Validação da Licença
 
-A assinatura deve ser gerada usando:
-
-```
-ECDSA ou RSA
-```
-
-Servidor possui:
+Fluxo de inicialização do `LicenseManager`:
 
 ```
-PRIVATE KEY
-```
-
-Framework possui:
-
-```
-PUBLIC KEY
-```
-
-Fluxo:
-
-```
-carregar licença
+iniciar framework
 ↓
-decodificar payload
+verificar licença no IndexedDB / localStorage
 ↓
-verificar assinatura com PUBLIC KEY
+se NÃO existir → mostrar Modal de Licença
 ↓
-se inválida → bloquear framework
+usuário insere chave e clica em "Validar"
 ↓
-se válida → continuar
+baixar licenses.json do GitHub
+↓
+verificar se chave existe no JSON
+↓
+se NÃO existir ou active == false → exibir erro (toast) e manter bloqueado
+↓
+se válida → salvar chave no cache local, fechar modal e iniciar Plugins
+
 ```
 
 ---
 
-# Expiração da Licença
+# Sistema de Permissões e Revogação
 
-A licença deve conter:
+As permissões de quais plugins o usuário pode rodar são extraídas diretamente do `licenses.json` remoto após a validação.
 
-```
-expires
-```
+Se a chave for comprometida, o administrador altera no GitHub:
 
-Framework verifica:
-
-```
-data atual > expires
-```
-
-Se expirada:
+```json
+"active": false
 
 ```
-bloquear execução
-mostrar toast
-```
+
+Na próxima inicialização (ou verificação periódica), o `LicenseManager` detecta a chave inativa, apaga o cache local e exibe o Modal solicitando uma nova chave.
 
 ---
 
-# Sistema de Permissões da Licença
+# Interface de Captura de Licença
 
-A licença define quais plugins podem ser executados.
+Visual do Modal de Autenticação:
 
-Exemplo:
-
-```
-"*"
-```
-
-Permite todos plugins.
-
-Ou:
-
-```
-["inputInterceptor", "scannerHelper"]
-```
-
-Permite apenas plugins específicos.
+- Fundo escurecido (backdrop blur).
+- Caixa centralizada com logotipo ou título do framework.
+- Input de texto limpo para a chave.
+- Botão "Validar Licença" com estado de _loading_ durante o `fetch`.
+- Estilo alinhado ao padrão visual definido (inspirado no Mercado Livre, bordas arredondadas, sombra suave).
 
 ---
 
@@ -201,6 +175,7 @@ Estrutura no repositório:
 repo
 │
 ├── framework.json
+├── licenses.json
 │
 ├── plugins
 │   │
@@ -213,6 +188,7 @@ repo
 │   └── scanner-helper
 │       ├── plugin.json
 │       └── plugin.js
+
 ```
 
 ---
@@ -279,6 +255,7 @@ verificar assinatura digital
 se válido → executar
 ↓
 se inválido → bloquear plugin
+
 ```
 
 ---
@@ -286,13 +263,13 @@ se inválido → bloquear plugin
 # Sandbox Real de Plugins
 
 Plugins **não devem executar diretamente no escopo global**.
-
 Devem rodar dentro de uma sandbox controlada.
 
 Implementação:
 
 ```
 PluginSandbox
+
 ```
 
 Execução:
@@ -321,6 +298,7 @@ document
 localStorage
 cookies
 fetch
+
 ```
 
 Somente APIs controladas.
@@ -348,17 +326,18 @@ API.toast.info(message)
 # Sistema de Cache Inteligente
 
 Plugins devem funcionar **offline**.
-
 Prioridade de armazenamento:
 
 ```
 IndexedDB
+
 ```
 
 Fallback:
 
 ```
 localStorage
+
 ```
 
 ---
@@ -372,6 +351,7 @@ cache
 │   ├── version
 │   ├── code
 │   └── hash
+
 ```
 
 ---
@@ -390,6 +370,7 @@ se versão diferente → baixar
 validar hash
 ↓
 salvar cache
+
 ```
 
 ---
@@ -400,6 +381,7 @@ Atualização deve usar:
 
 ```
 plugins/index.json
+
 ```
 
 Fluxo:
@@ -418,6 +400,7 @@ validar segurança
 atualizar cache
 ↓
 executar hot reload
+
 ```
 
 ---
@@ -434,6 +417,7 @@ remover listeners
 carregar nova versão
 ↓
 init()
+
 ```
 
 ---
@@ -444,6 +428,7 @@ Arquivo remoto:
 
 ```
 framework.json
+
 ```
 
 Exemplo:
@@ -463,12 +448,14 @@ Framework verifica no início:
 
 ```
 framework.json
+
 ```
 
 Se:
 
 ```
 enabled = false
+
 ```
 
 Framework:
@@ -477,6 +464,7 @@ Framework:
 desativa imediatamente
 mostra mensagem
 não carrega plugins
+
 ```
 
 ---
@@ -487,6 +475,7 @@ Se:
 
 ```
 framework.version < minVersion
+
 ```
 
 Framework:
@@ -494,6 +483,7 @@ Framework:
 ```
 bloqueia execução
 solicita atualização
+
 ```
 
 ---
@@ -508,12 +498,14 @@ success
 warning
 error
 download-progress
+
 ```
 
 Posição:
 
 ```
 canto inferior direito
+
 ```
 
 ---
@@ -524,6 +516,7 @@ Estilo visual inspirado em:
 
 ```
 Mercado Livre
+
 ```
 
 Características:
@@ -542,6 +535,7 @@ Abrir painel:
 
 ```
 ALT + Q
+
 ```
 
 ---
@@ -553,6 +547,7 @@ Interface deve mostrar:
 ```
 ☑ Interceptador Inteligente ⚙
 ☐ Scanner Helper
+
 ```
 
 Exibir:
@@ -572,6 +567,7 @@ Interceptar entradas vindas de:
 ```
 CTRL + V
 leitores de código de barras
+
 ```
 
 ---
@@ -582,6 +578,7 @@ Regex:
 
 ```
 /\D/g
+
 ```
 
 Remove tudo que não for número.
@@ -594,12 +591,14 @@ Remove tudo que não for número.
 
 ```
 11 dígitos
+
 ```
 
 ### Chave de rastreio
 
 ```
 44 dígitos
+
 ```
 
 ---
@@ -612,12 +611,14 @@ Redirecionar para:
 
 ```
 https://envios.adminml.com/logistics/package-management/package/{ID}
+
 ```
 
 ou
 
 ```
 https://shipping-bo.adminml.com/sauron/shipments/shipment/{ID}
+
 ```
 
 ---
@@ -628,6 +629,7 @@ https://shipping-bo.adminml.com/sauron/shipments/shipment/{ID}
 sanitizar
 preencher input ativo
 não redirecionar
+
 ```
 
 ---
@@ -645,6 +647,8 @@ Logs possíveis:
 ```
 [Framework] iniciado
 [License] licença validada
+[License] modal exibido
+[License] chave revogada/inválida
 [Security] hash validado
 [Security] assinatura válida
 [PluginManager] plugin carregado
@@ -654,6 +658,7 @@ Logs possíveis:
 [Permission] plugin bloqueado
 [KillSwitch] framework desativado
 [Interceptor] entrada detectada
+
 ```
 
 ---
@@ -662,7 +667,7 @@ Logs possíveis:
 
 Gerar um **framework completo funcional** contendo:
 
-1️⃣ LicenseManager
+1️⃣ LicenseManager (com verificação remota no GitHub e Modal de UI)
 2️⃣ PluginManager
 3️⃣ PluginSandbox
 4️⃣ RemoteLoader
@@ -673,6 +678,6 @@ Gerar um **framework completo funcional** contendo:
 9️⃣ KillSwitchManager
 🔟 Sistema de cache offline
 1️⃣1️⃣ Sistema de atualização automática
-1️⃣2️⃣ UI completa com painel de plugins
+1️⃣2️⃣ UI completa com painel de plugins e Modal de Licença
 1️⃣3️⃣ Atalho global ALT+Q
 1️⃣4️⃣ Plugin inicial interceptador completo
