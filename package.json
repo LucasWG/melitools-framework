@@ -2,6 +2,7 @@
 	"name": "melitools-framework",
 	"version": "1.0.0",
 	"description": "Modular automation framework for Tampermonkey",
+	"type": "module",
 	"main": "dist/melitools.user.js",
 	"scripts": {
 		"build": "ts-node build.config.ts",
