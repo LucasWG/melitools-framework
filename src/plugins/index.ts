@@ -9,9 +9,11 @@ import type { PluginRegisterFn } from '../core/types'
 // Importar todos os plugins
 import registerPackageStatusChanger from './package-status-changer'
 import registerQuickNavigator from './quick-navigator'
+import registerReturnAutomation from './return-automation'
 
 // Lista de plugins para registro
 export const plugins: Array<[string, PluginRegisterFn]> = [
   ['package-status-changer', registerPackageStatusChanger],
-  ['quick-navigator', registerQuickNavigator]
+  ['quick-navigator', registerQuickNavigator],
+  ['return-automation', registerReturnAutomation]
 ]

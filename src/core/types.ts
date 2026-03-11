@@ -67,6 +67,21 @@ export interface KeyboardShortcutConfig {
   shiftKey?: boolean
 }
 
+export const MELITOOLS_THEME = {
+  primaryColor: '#3483fa',
+  secondaryColor: '#ffe600',
+  successColor: '#00a650',
+  errorColor: '#f23d4f',
+  warningColor: '#fff5e6',
+  fontFamily: "'Proxima Nova', -apple-system, 'Helvetica Neue', Helvetica, Roboto, Arial, sans-serif",
+  shadows: {
+    small: '0 2px 8px rgba(0,0,0,0.10)',
+    medium: '0 4px 15px rgba(0,0,0,0.2)',
+    large: '0 6px 20px rgba(0,0,0,0.15)'
+  },
+  borderRadius: '6px'
+}
+
 export interface UtilsService {
   sleep(ms: number): Promise<void>
   onPageLoad(callback: () => void): void
@@ -76,6 +91,8 @@ export interface UtilsService {
   matchUrls(patterns: string[]): boolean
   copyToClipboard(text: string, label?: string): Promise<void>
   registerKeyboardShortcut(keys: KeyboardShortcutConfig[], callback: (event: KeyboardEvent) => void): void
+  playSound(frequency: number, duration: number, delayBetween?: number): void
+  downloadFile(content: string, filename: string, mimeType?: string): void
 }
 
 export interface NavigationService {

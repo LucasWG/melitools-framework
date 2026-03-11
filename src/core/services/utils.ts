@@ -83,6 +83,44 @@ export const createUtilsService = (): UtilsService => {
       }
 
       document.addEventListener('keydown', handleKeyDown)
+    },
+
+    playSound(frequency: number, duration: number, delayBetween: number = 0): void {
+      try {
+        const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
+        const playBip = (delay: number) => {
+          setTimeout(() => {
+            const osc = ctx.createOscillator()
+            const gain = ctx.createGain()
+            osc.connect(gain)
+            gain.connect(ctx.destination)
+            osc.frequency.value = frequency
+            osc.type = 'sine'
+            gain.gain.setValueAtTime(0.3, ctx.currentTime)
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration / 1000)
+            osc.start(ctx.currentTime)
+            osc.stop(ctx.currentTime + duration / 1000)
+          }, delay)
+        }
+        playBip(0)
+        if (delayBetween > 0) {
+          playBip(delayBetween)
+        }
+      } catch (error) {
+        console.warn('[MeliTools] Áudio bloqueado pelo navegador')
+      }
+    },
+
+    downloadFile(content: string, filename: string, mimeType: string = 'text/plain'): void {
+      const blob = new Blob([content], { type: mimeType })
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = filename
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
     }
   }
 }
