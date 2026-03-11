@@ -79,8 +79,17 @@ export default function registerQuickNavigator(api: MeliToolsAPI) {
 
   const redirectToUrl = (id: string) => {
     const url = `${config.REDIRECT_URL_BASE}${id}`
-    api.logging.info(`Redirecionando para: ${url}`)
-    api.navigation.redirectTo(url)
+
+    // Copiar ID para clipboard
+    navigator.clipboard.writeText(id).then(() => {
+      api.logging.info(`ID copiado: ${id}`)
+      api.logging.info(`Redirecionando para: ${url}`)
+      api.navigation.redirectTo(url)
+    }).catch((err) => {
+      api.logging.error(`Erro ao copiar ID: ${err}`)
+      api.logging.info(`Redirecionando para: ${url}`)
+      api.navigation.redirectTo(url)
+    })
   }
 
   const handlePaste = (event: ClipboardEvent) => {
