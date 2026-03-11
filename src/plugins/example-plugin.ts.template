@@ -1,0 +1,151 @@
+/**
+ * Template: Example Plugin
+ *
+ * Este é um template de exemplo que mostra como criar um novo plugin para MeliTools.
+ * Para criar um novo plugin:
+ * 1. Copiar este arquivo para src/plugins/seu-novo-plugin.ts
+ * 2. Implementar a lógica conforme necessário
+ * 3. O build script automaticamente descobrirá e registrará o plugin
+ *
+ * Padrão de nomeação: use kebab-case (ex: my-awesome-plugin.ts)
+ */
+
+import type { MeliToolsAPI } from '../core/types'
+
+/**
+ * Função de registro do plugin
+ *
+ * Esta função será chamada durante a inicialização do MeliTools.
+ * Use a API injetada (api) para acessar serviços como ui, dom, utils, etc.
+ */
+export default function registerExamplePlugin(api: MeliToolsAPI) {
+  // Verificar se deve ativar em determinadas URLs
+  const enabledUrls = ['https://example.com/*']
+  if (!api.utils.matchUrls(enabledUrls)) {
+    return
+  }
+
+  // Seu código de inicialização aqui
+  api.logging.info('Example Plugin initialized')
+
+  /**
+   * Exemplo: Ouvir eventos DOM
+   */
+  document.addEventListener('click', (event) => {
+    {
+      // Mostrar toast ao clicar em qualquer elemento
+      const target = event.target as HTMLElement
+      api.ui.showToast(`Você clicou em: ${target.tagName}`, { type: 'info', duration: 2000 })
+    }
+  })
+
+  /**
+   * Exemplo: Atalho de teclado
+   */
+  document.addEventListener('keydown', (event) => {
+    if (event.ctrlKey && event.key === 'p') {
+      event.preventDefault()
+      api.ui.showToast('Atalho Ctrl+P acionado!', { type: 'success' })
+    }
+  })
+
+  /**
+   * Exemplo: Usar o serviço de storage
+   */
+  const savedData = api.storage.get('example_key')
+  if (!savedData) {
+    api.storage.set('example_key', { count: 0, timestamp: Date.now() })
+    api.logging.debug('Salvou dados iniciais no storage')
+  } else {
+    api.logging.debug(`Dados anteriores recuperados: ${JSON.stringify(savedData)}`)
+  }
+
+  /**
+   * Exemplo: Esperar por elemento e interagir
+   */
+  ;(async () => {
+    try {
+      const button = await api.dom.waitForElement('button[type="submit"]', { timeout: 5000 })
+      api.logging.debug('Botão submit encontrado')
+
+      // Preencher um formulário
+      const input = api.dom.find('input[type="text"]')
+      if (input) {
+        api.dom.fill(input, 'valor automático')
+      }
+    } catch (error) {
+      api.logging.warn('Não foi possível encontrar elemento esperado')
+    }
+  })()
+
+  /**
+   * Exemplo: Criar painel modal
+   */
+  // Descomentar para testar
+  /*
+  const modal = api.ui.createModal({
+    title: 'Exemplo Modal',
+    content: 'Este é um exemplo de modal. Use a API para criar interfaces!',
+    buttons: [
+      {
+        text: 'Cancelar',
+        type: 'quiet',
+        action: () => modal.hide()
+      },
+      {
+        text: 'Confirmar',
+        type: 'loud',
+        action: () => {
+          api.ui.showToast('Confirmado!', { type: 'success' })
+          modal.hide()
+        }
+      }
+    ]
+  })
+  modal.show()
+  */
+}
+
+/**
+ * Guia de utilização da API:
+ *
+ * api.ui.*
+ *   - createFloatingElement(options) → HTMLElement
+ *   - showElement(element, transform) → void
+ *   - hideElement(element, transform) → void
+ *   - showToast(message, options) → void
+ *   - createModal(options) → HTMLElement & { show(), hide() }
+ *
+ * api.dom.*
+ *   - find(selector) → HTMLElement | null
+ *   - findAll(selector) → NodeListOf<HTMLElement>
+ *   - click(element | selector) → void
+ *   - fill(element | selector, value) → void
+ *   - waitForElement(selector, options) → Promise<HTMLElement>
+ *   - exists(selector) → boolean
+ *
+ * api.utils.*
+ *   - sleep(ms) → Promise<void>
+ *   - onPageLoad(callback) → void
+ *   - log(message) → void
+ *   - matchUrl(pattern) → boolean
+ *   - matchUrls(patterns) → boolean
+ *
+ * api.navigation.*
+ *   - redirectTo(url) → void
+ *   - refresh() → void
+ *   - goBack() → void
+ *
+ * api.storage.*
+ *   - set(key, value) → void
+ *   - get(key) → any
+ *   - remove(key) → void
+ *   - clear() → void
+ *
+ * api.logging.*
+ *   - log(message, level) → void
+ *   - debug(message) → void
+ *   - info(message) → void
+ *   - warn(message) → void
+ *   - error(message) → void
+ */

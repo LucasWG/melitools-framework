@@ -1,0 +1,24 @@
+{
+  "name": "melitools",
+  "version": "2.0.0",
+  "description": "MeliTools - Conjunto de ferramentas para automatizar e auxiliar no SVC (Service Center)",
+  "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "build": "node --loader=ts-node/esm build/build.ts",
+    "dev": "node --loader=ts-node/esm build/build.ts --watch",
+    "test": "echo 'Test suite not yet implemented'",
+    "clean": "rm -rf dist/ src/plugins/index.ts"
+  },
+  "keywords": ["tampermonkey", "userscript", "melitools"],
+  "author": "LwG94",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.10.6",
+    "esbuild": "^0.20.1",
+    "typescript": "^5.3.3",
+    "ts-node": "^10.9.2"
+  }
+}

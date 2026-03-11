@@ -1,0 +1,69 @@
+Você é um engenheiro de software sênior especializado em TypeScript, bundlers e userscripts. Sua tarefa é transformar o userscript JavaScript fornecido (arquivo original anexado: :contentReference[oaicite:1]{index=1}) em um **framework modular** escrito em **TypeScript**, com arquitetura **CORE + PLUGINS**, usando **pnpm** como gerenciador e um processo de BUILD que gera **um único arquivo final compatível com Tampermonkey** (comentário header + código bundlado). Requisitos rígidos:
+
+1. **Compatibilidade absoluta**
+   - O userscript final gerado deve produzir **o mesmo resultado funcional** e manter a mesma API global `window.MeliTools` e mesmo comportamento nas páginas alvo definidas no header do arquivo original.
+   - Preserve as strings do header Tampermonkey (nome, @match, @grant, @connect, @updateURL, @downloadURL) exatamente como no script original, a não ser que o ajuste seja explicitamente necessário para suportar a nova arquitetura (documente qualquer mudança).
+   - O bundler e as transformações devem garantir que o runtime final se comporte igual (mesma ordem de execução, mesmo escopo global).
+
+2. **Arquitetura e qualidade de código**
+   - Separar em módulos fortemente tipados (TypeScript): `core` (API pública + compat layer), `core/services/*` (dom, ui, utils, navigation, storage, logging), `plugins/*` (cada plugin independente), `compat/legacy.ts` (opcional, trecho para garantir 1:1).
+   - Definir uma interface pública `MeliToolsAPI` (tipos TS) que exponha todas as funções usadas por plugins (ui, dom, utils, navigation, quickNavigator, packageStatusChanger etc).
+   - Plugins devem implementar `export default function register(api: MeliToolsAPI): void` **ou** `export const plugin: Plugin` com metadados (`id`, `name`, `enabledByDefault`) — escolha uma forma e seja consistente.
+   - Usar técnicas avançadas: injeção de dependência leve (passar `api` para plugins), typesafe plugin contracts (interfaces), build-time plugin discovery (scanner que lê `src/plugins/*.ts` e cria um entrypoint), isolação (cada plugin registra apenas funções que precisa).
+
+3. **Build & Bundling**
+   - Usar **esbuild** ou **Rollup** (preferência por esbuild pela velocidade) para:
+     - Compilar TS -> single IIFE UMD-like bundle (sem módulos externos).
+     - Gerar um único arquivo `dist/melitools.user.js` contendo primeiro o header Tampermonkey (copiado do original) e depois o bundle JS.
+     - Fazer *static plugin discovery* na etapa de build: `build.ts` deve escanear `src/plugins/*.ts`, gerar dinamicamente `src/plugins/index.ts` que importa e registra todos os plugins, e depois bundlar a entrada `src/core/boot.ts`.
+   - Minimizar mudanças de runtime: preserve nomes de funções exportadas e a ordem de execução lógica (init modules na mesma ordem do original).
+
+4. **Compatibilidade incremental / migração segura**
+   - Fornecer um módulo `compat/legacy.ts` que contém um port (linha-a-linha) do código original quando necessário — esse módulo será usado para validar comportamento. Idealmente, refatore gradualmente cada bloco (ui, dom, utils...) para módulos TS; mas mantenha o `compat` para comparação e fallback.
+   - Gerar testes automatizados (ou scripts de verificação) que façam *snapshot diffs* entre a execução do legacy e a execução do novo core em páginas de teste (ou mocks) — documente como executar.
+
+5. **API de Plugins & Template**
+   - Forneça template de plugin TypeScript (nome, descrição, exemplo de uso de `api.ui.showToast(...)`, `api.dom.waitForElement(...)`).
+   - Plugins não devem depender de `window` diretamente; sempre usar `api` para ações DOM/UI para garantir isolação e testabilidade.
+
+6. **Scripts e configuração**
+   - Forneça `package.json` (pnpm), `tsconfig.json`, `esbuild` build script `build/build.ts` (Node) e `pnpm` scripts:
+     - `pnpm build` — faz scan de plugins, gera `plugins/index.ts`, roda esbuild e emite `dist/melitools.user.js` com header.
+     - `pnpm dev` — build em modo watch (se aplicável).
+     - `pnpm test` — executa verificações básicas / snapshots.
+   - Incluir ESLint + Prettier (opcional, sugerir configuração mínima).
+
+7. **Entrega**
+   - Entregar (no output) **exatamente**:
+     A. Estrutura de projeto (tree).
+     B. `package.json` (exemplo).
+     C. `tsconfig.json` (base).
+     D. Script `build/build.ts` (Node) que:
+        - Lê header template `build/header.template.js` (ou `src/header.ts`),
+        - Gera `src/plugins/index.ts` importando todos os plugins detectados,
+        - Invoca esbuild para bundlear `src/core/boot.ts` para um único JS string,
+        - Prefixa o header no arquivo final e escreve `dist/melitools.user.js`.
+     E. Template de `src/core/boot.ts`, `src/core/index.ts` (API pública) e `src/core/services/*` (dom, ui, utils) com assinaturas e exemplos.
+     F. Template de plugin `src/plugins/example-plugin.ts`.
+     G. Um plano de testes/validação que garante compatibilidade 1:1 (passo-a-passo: como testar em staging e validar logs / snapshots).
+
+8. **Preservar header original**
+   - Copie exatamente o bloco do header original (do arquivo anexo) para `build/header.template.js` por padrão, mantendo `@updateURL` e `@downloadURL`. Se necessário, documente por que mudaria (por exemplo: renovar @version via build).
+
+9. **Documentação / README**
+   - Gerar README curto explicando:
+     - Como adicionar um plugin (`criar src/plugins/my-plugin.ts` conforme template).
+     - Como rodar `pnpm build` e como instalar o output no Tampermonkey.
+     - Checklist de compatibilidade (quais coisas verificar quando migrar um módulo: APIs expostas, eventos, storage keys).
+
+10. **Restrições**
+    - Não executar carregamento dinâmico de plugins no runtime (o requisito do projeto anterior era evitar `@require` dinâmico). Todo plugin deve ser incluído no *bundle* durante o build.
+    - Não alterar comportamento observável (classes CSS, IDs, textos exibidos, atalhos, etc.) sem registrar.
+
+---
+
+**Agora gere todo o conteúdo pedido nos itens de 8 (A->G) — código, configs e README — em TypeScript/Node, pronto para executar com pnpm.** Use o arquivo original anexado (:contentReference[oaicite:2]{index=2}) como a fonte de verdade para extrair trechos de código/strings/headers e para mapear as responsabilidades de `ui`, `dom`, `utils`, `quickNavigator` e `packageStatusChanger`.
+
+Se algo do arquivo original for ambíguo, não pergunte — faça a melhor decomposição possível que preserve comportamentos e documente suas decisões no README (ex.: "dividi `MeliTools.ui` em `core/services/ui.ts` mantendo as mesmas funções: createFloatingElement, showToast, createModal, etc.").
+
+Entregue o output completo (arquivos/trechos) na resposta.
