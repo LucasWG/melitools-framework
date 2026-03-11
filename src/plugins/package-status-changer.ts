@@ -446,14 +446,6 @@ export default function registerPackageStatusChanger(api: MeliToolsAPI) {
     }
   }
 
-  const copyToClipboard = (text: string, label: string = 'Copiado') => {
-    navigator.clipboard.writeText(text).then(() => {
-      api.ui.showToast(`${label}!`, { type: 'success', duration: 2000 })
-    }).catch(() => {
-      api.ui.showToast('Erro ao copiar', { type: 'error', duration: 2000 })
-    })
-  }
-
   const showLogPanel = (logs: LogEntry[]) => {
     const logGroups = logs.reduce(
       (acc, log) => {
@@ -674,28 +666,29 @@ export default function registerPackageStatusChanger(api: MeliToolsAPI) {
     }
   }
 
-  const handleShortcut = (event: KeyboardEvent) => {
-    if (event.altKey && (event.key === 'q' || event.key === 'Q')) {
-      event.preventDefault()
+  const config = {
+    REDIRECT_URL_BASE: 'https://envios.adminml.com/logistics/package-management/package/'
+  }
 
+  // Registra atalho Alt+Q para abrir/fechar painel de controle
+  api.utils.registerKeyboardShortcut(
+    [
+      { key: 'q', altKey: true },
+      { key: 'Q', altKey: true }
+    ],
+    (event: KeyboardEvent) => {
+      event.preventDefault()
       const executionData = api.storage.get('psc_execution_data')
       if (executionData) {
         interruptExecution()
       }
-
       if (state.controlPanel) {
         state.controlPanel.hide()
       } else {
         showControlPanel()
       }
     }
-  }
-
-  const config = {
-    REDIRECT_URL_BASE: 'https://envios.adminml.com/logistics/package-management/package/'
-  }
-
-  document.addEventListener('keydown', handleShortcut)
+  )
   api.utils.onPageLoad(() => processNextInQueue())
 
   api.logging.info(

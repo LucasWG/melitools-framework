@@ -1,4 +1,6 @@
-import type { UtilsService } from '../types'
+import type { UtilsService, KeyboardShortcutConfig } from '../types'
+
+declare let MeliTools: any
 
 export const createUtilsService = (): UtilsService => {
   return {
@@ -49,6 +51,38 @@ export const createUtilsService = (): UtilsService => {
         return false
       }
       return patterns.some(pattern => this.matchUrl(pattern))
+    },
+
+    async copyToClipboard(text: string, label: string = 'Copiado'): Promise<void> {
+      try {
+        await navigator.clipboard.writeText(text)
+        // Acessa a API por window para evitar circular dependency
+        if (typeof window !== 'undefined' && (window as any).MeliTools?.ui?.showToast) {
+          (window as any).MeliTools.ui.showToast(`${label}!`, { type: 'success', duration: 2000 })
+        }
+      } catch (error) {
+        if (typeof window !== 'undefined' && (window as any).MeliTools?.ui?.showToast) {
+          (window as any).MeliTools.ui.showToast('Erro ao copiar', { type: 'error', duration: 2000 })
+        }
+      }
+    },
+
+    registerKeyboardShortcut(keys: KeyboardShortcutConfig[], callback: (event: KeyboardEvent) => void): void {
+      const handleKeyDown = (event: KeyboardEvent) => {
+        for (const keyConfig of keys) {
+          const keyMatches = keyConfig.key.toLowerCase() === event.key.toLowerCase()
+          const altMatches = keyConfig.altKey ? event.altKey : !event.altKey
+          const ctrlMatches = keyConfig.ctrlKey ? event.ctrlKey : !event.ctrlKey
+          const shiftMatches = keyConfig.shiftKey ? event.shiftKey : !event.shiftKey
+
+          if (keyMatches && altMatches && ctrlMatches && shiftMatches) {
+            callback(event)
+            return
+          }
+        }
+      }
+
+      document.addEventListener('keydown', handleKeyDown)
     }
   }
 }

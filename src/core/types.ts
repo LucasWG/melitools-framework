@@ -60,6 +60,13 @@ export interface DOMService {
   exists(selector: string): boolean
 }
 
+export interface KeyboardShortcutConfig {
+  key: string
+  altKey?: boolean
+  ctrlKey?: boolean
+  shiftKey?: boolean
+}
+
 export interface UtilsService {
   sleep(ms: number): Promise<void>
   onPageLoad(callback: () => void): void
@@ -67,6 +74,8 @@ export interface UtilsService {
   log(message: string): void
   matchUrl(pattern: string): boolean
   matchUrls(patterns: string[]): boolean
+  copyToClipboard(text: string, label?: string): Promise<void>
+  registerKeyboardShortcut(keys: KeyboardShortcutConfig[], callback: (event: KeyboardEvent) => void): void
 }
 
 export interface NavigationService {
