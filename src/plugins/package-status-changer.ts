@@ -446,6 +446,14 @@ export default function registerPackageStatusChanger(api: MeliToolsAPI) {
     }
   }
 
+  const copyToClipboard = (text: string, label: string = 'Copiado') => {
+    navigator.clipboard.writeText(text).then(() => {
+      api.ui.showToast(`${label}!`, { type: 'success', duration: 2000 })
+    }).catch(() => {
+      api.ui.showToast('Erro ao copiar', { type: 'error', duration: 2000 })
+    })
+  }
+
   const showLogPanel = (logs: LogEntry[]) => {
     const logGroups = logs.reduce(
       (acc, log) => {
@@ -455,6 +463,16 @@ export default function registerPackageStatusChanger(api: MeliToolsAPI) {
         return acc
       },
       {} as Record<string, LogEntry[]>
+    )
+
+    // Gerar IDs por grupo e todos os IDs
+    const allIds = logs.map(log => log.id).join('\n')
+    const groupIds = Object.keys(logGroups).reduce(
+      (acc, status) => {
+        acc[status] = logGroups[status].map(log => log.id).join('\n')
+        return acc
+      },
+      {} as Record<string, string>
     )
 
     const logContent =
@@ -469,14 +487,47 @@ export default function registerPackageStatusChanger(api: MeliToolsAPI) {
                 }; border-radius: 3px;"><strong>${log.id}</strong>: ${log.message}</div>`
             )
             .join('')
-          return `<div style="margin-top: 12px;"><strong style="color: #333;">${status} (${items.length})</strong>${items}</div>`
+          const ids = groupIds[status]
+          const idCount = logGroups[status].length
+          return `
+            <div style="margin-top: 12px; padding: 10px; background-color: #f9f9f9; border-left: 4px solid ${
+              status === 'Sucesso' ? '#27ae60' : status === 'Falha na Alteração' ? '#e74c3c' : '#f39c12'
+            }; border-radius: 3px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <strong style="color: #333;">${status} (${idCount})</strong>
+                <button
+                  onclick="navigator.clipboard.writeText(\`${ids.replace(/`/g, '\\`')}\`).then(() => alert('${idCount} ID(s) copiado(s)!')).catch(() => alert('Erro ao copiar'))"
+                  style="padding: 4px 12px; background-color: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600;"
+                >
+                  📋 Copiar IDs
+                </button>
+              </div>
+              ${items}
+            </div>
+          `
         })
         .join('') || 'Nenhum log para exibir.'
+
+    const panelContent = `
+      <div style="display: flex; flex-direction: column; gap: 15px;">
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+          <button
+            onclick="navigator.clipboard.writeText(\`${allIds.replace(/`/g, '\\`')}\`).then(() => alert('${logs.length} ID(s) copiado(s)!')).catch(() => alert('Erro ao copiar'))"
+            style="padding: 8px 16px; background-color: #27ae60; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;"
+          >
+            📋 Copiar Todos os IDs (${logs.length})
+          </button>
+        </div>
+        <div style="font-family: monospace; max-height: 60vh; overflow-y: auto; background-color: #f7f7f7; border: 1px solid #ddd; padding: 10px; border-radius: 4px;">
+          ${logContent}
+        </div>
+      </div>
+    `
 
     const panel = api.ui.createModal({
       id: 'psc-log-panel',
       title: 'Resultado do Processamento',
-      content: `<div style="font-family: monospace; max-height: 60vh; overflow-y: auto; background-color: #f7f7f7; border: 1px solid #ddd; padding: 10px; border-radius: 4px;">${logContent}</div>`,
+      content: panelContent,
       maxWidth: '1200px',
       zIndex: '999',
       buttons: [
